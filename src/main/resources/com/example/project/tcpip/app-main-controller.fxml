@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<?import javafx.scene.text.Font?>
+<BorderPane prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.project.tcpip.AppMainController">
+    <top>
+        <VBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <Label fx:id="title" prefHeight="38.0" prefWidth="500.0" text="안녕하세요" alignment="CENTER">
+                    <font>
+                        <Font size="20.0" />
+                    </font>
+                    출처: https://jinseongsoft.tistory.com/281 [진성 소프트:티스토리]
+                </Label>
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <Label prefHeight="20.0" prefWidth="100.0" text="BRIGHTNESS" />
+                <ProgressBar fx:id="progressbar_light_value" prefHeight="20.0" prefWidth="350.0" />
+                <Label fx:id="label_temperature" prefHeight="20.0" prefWidth="50.0" text="밝기" />
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <PasswordField fx:id="passwordField" />
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <Button fx:id="button_num1" onAction="#buttonOnClicked1" prefHeight="60.0" prefWidth="60.0" text="1">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_num2" onAction="#buttonOnClicked2" prefHeight="60.0" prefWidth="60.0" text="2">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_num3" onAction="#buttonOnClicked3" prefHeight="60.0" prefWidth="60.0" text="3">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <Button fx:id="button_num4" onAction="#buttonOnClicked4" prefHeight="60.0" prefWidth="60.0" text="4">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_num5" onAction="#buttonOnClicked5" prefHeight="60.0" prefWidth="60.0" text="5">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_num6" onAction="#buttonOnClicked6" prefHeight="60.0" prefWidth="60.0" text="6">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <Button fx:id="button_num7" onAction="#buttonOnClicked7" prefHeight="60.0" prefWidth="60.0" text="7">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_num8" onAction="#buttonOnClicked8" prefHeight="60.0" prefWidth="60.0" text="8">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_num9" onAction="#buttonOnClicked9" prefHeight="60.0" prefWidth="60.0" text="9">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>20.0</spacing>
+                <Button fx:id="button_pro" onAction="#buttonOnClickedPro" prefHeight="60.0" prefWidth="60.0" text="관리자" />
+                <Button fx:id="button_num0" onAction="#buttonOnClicked0" prefHeight="60.0" prefWidth="60.0" text="0">
+                    <font>
+                        <Font size="20"/>
+                    </font>
+                </Button>
+                <Button fx:id="button_Enter" onAction="#buttonOnClickedEnter" prefHeight="60.0" prefWidth="60.0" text="ENTER" />
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="10.0" />
+                </padding>
+                <spacing>50</spacing>
+                <Button fx:id="button_add_card" onAction="#buttonOnClickedAddCard" prefHeight="30.0" prefWidth="200.0" text="ADD_CARD"/>
+                <Button fx:id="button_add_pwd" onAction="#buttonOnClickedAddPwd" prefHeight="30.0" prefWidth="200.0" text="비밀번호 추가" />
+            </HBox>
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets topRightBottomLeft="40.0" />
+                </padding>
+                <spacing>50</spacing>
+                <Button fx:id="button_auto_led" onAction="#buttonOnClickedLEDAUTO" prefHeight="30.0" prefWidth="200.0" text="Auto_LED_Off" />
+                <Button fx:id="button_light_onoff" onAction="#buttonOnClickedLightOnOff" prefHeight="30.0" prefWidth="200.0" text="자동 현관 조명 On" />
+                <Button fx:id="button_siren_OnOff" onAction="#buttonOnClickedSirenOnOff" prefHeight="30.0" prefWidth="200.0" text="사이렌 On" />
+            </HBox>
+        </VBox>
+    </top>
+</BorderPane>
