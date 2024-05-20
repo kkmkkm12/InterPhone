@@ -1,119 +1,117 @@
-  1 #include <iostream>         //C++ stdio.h
-  2 #include <cstring>          //C++ old style = string.h
-  3 #include <vector>           //vector 자료구조
-  4 #include <array>            //array 자료구조 => 배열
-  5 #include <sys/socket.h>
-  6 #include <arpa/inet.h>      //192.168.0.13을 네트워크 값으로 변경 시켜주는 라이브러리   빅 인디언(네트워크), 리틀인디언(컴퓨터), 변경을 위해
-  7 #include <pthread.h>
-  8 #include <semaphore.h>      //mutex
-  9 #include "SerialPort.cpp"  //Serial통신을 위한 라이브러리
- 10
- 11 void* task(void*);              //thread함수 => task main
- 12 void* taskSerial(void*);        //thread함수 => Serial 전송용 thread
- 13 static pthread_mutex_t mutex;   //key
- 14 static std::vector<int> client_socket_fds;   //client들의 fd 저장하는 자료구조
- 15 static int serial_port = 0;     //시리얼 포트 저장용 변수
- 16
- 17 //네트워크 상에서 문자열 저장 array
- 18 static std::array<char, BUFSIZ> tcp_message;       //buffer -> 임계영역
- 19 static std::array<char, BUFSIZ> serial_message;    //buffer -> 임계영역
- 20
- 21 int main(int argc, const char* argv[]){
- 22     int server_sock_fd{0};
- 23     int client_sock_fd{0};
- 24     struct sockaddr_in server_addr;
- 25     struct sockaddr_in client_addr;
- 26     pthread_t pid;      //thread를 담기 위한 변수
- 27     if(argc != 2){
- 28         std::cout << "./SERVER 9999" << std::endl;
- 29         exit(EXIT_FAILURE); //exit(1);
- 30     }
- 31     serial_port = serialport_init("/dev/ttyACM0", 115200, nullptr);
- 32     if(serial_port == -1){
- 33         std::cout << "Serial connect error()" << std::endl;
- 34         exit(EXIT_FAILURE);
- 35     }
- 36     std::cout << "Serial Port is connected ..." << std::endl;
- 37
- 38     server_sock_fd = socket(PF_INET, SOCK_STREAM, 0);
- 39     if(server_sock_fd == -1){
- 40         std::cout << "socket() error" << std::endl;
- 41         exit(EXIT_FAILURE);
- 42     }
- 43     memset(&server_addr, 0, sizeof server_addr);
- 44     memset(&client_addr, 0, sizeof client_addr);
- 45     server_addr.sin_family = AF_INET;
- 46     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
- 47     server_addr.sin_port = htons(atoi(argv[1]));
- 48     const int bind_state = bind(server_sock_fd, (const struct sockaddr*)&server_addr, sizeof server_addr);
- 49     if(bind_state == -1){
- 50         std::cout << "bind() error" << std::endl;
- 51         exit(EXIT_FAILURE);
- 52     }
- 53
- 54     const int listen_state = listen(server_sock_fd, 5);
- 55     if(listen_state == -1){
- 56         std::cout << "listen() error" << std::endl;
- 57         exit(EXIT_FAILURE);
- 58     }
- 59     //온습도 값들을 출력하는 thread를 생성할 거다
- 60     pthread_create(&pid, nullptr, taskSerial, static_cast<void*>(nullptr));
- 61     socklen_t client_sock_addr_size {0ul};
- 62
- 63     while(true){
- 64         client_sock_addr_size = sizeof client_addr;
- 65         client_sock_fd = accept(server_sock_fd, (struct sockaddr*)&client_addr, (socklen_t*)&client_sock_addr_size);
- 66         if(client_sock_fd == -1){
- 67             std::cout << "accept() error" << std::endl;
- 68             break;
- 69         }
- 70         std::cout << "Connected from client IP : " << inet_ntoa(client_addr.sin_addr) << std::endl;
- 71
- 72         //임계영역
- 73         pthread_mutex_lock(&mutex);     //lock 걸기
- 74         client_socket_fds.push_back(client_sock_fd);
- 75         pthread_mutex_unlock(&mutex);   //lock 풀기
- 76         pthread_create(&pid, nullptr, task, static_cast<void*>(&client_sock_fd));           //client들 thread만들기
- 77         pthread_detach(pid);        //자동 종료 -> pthread_join() 이랑 같은거
- 78
- 79     }
- 80
- 81     close(server_sock_fd);
- 82     return int(0);
- 83 }
- 84
- 85 void* taskSerial(void* arg){
- 86     while(true){
- 87         const int serial_state = serialport_read_until(serial_port, serial_message.data(), '\n');
- 88         if(!serial_state){
- 89             pthread_mutex_lock(&mutex);
- 90             for(auto fd : client_socket_fds){
- 91                 write(fd, serial_message.data(), strlen(serial_message.data()));
- 92             }
- 93             pthread_mutex_unlock(&mutex);
- 94         }
- 95     }
- 96 }
- 97
- 98 void* task(void* arg){
- 99     const int clnt_sock_fd {*(static_cast<int*>(arg))};
-100     int tcp_str_length = 0;
-101     while((tcp_str_length = read(clnt_sock_fd, tcp_message.data(), BUFSIZ)) != 0){
-102         pthread_mutex_lock(&mutex);
-103         serialport_write(serial_port, tcp_message.data());
-104         pthread_mutex_unlock(&mutex);
-105     }
-106     pthread_mutex_lock(&mutex);
-107     int index {0};
-108
-109     for(auto it {client_socket_fds.begin()}; it != client_socket_fds.end(); ++it){
-110         if(*it == clnt_sock_fd){
-111             client_socket_fds.erase(it);
-112             break;
-113         }
-114     }
-115
-116     pthread_mutex_unlock(&mutex);
-117     close(clnt_sock_fd);
-118     return nullptr;
-119 }
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <array>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include "SerialPort.cpp"
+
+void* task(void*);
+void* taskSerial(void*);
+static pthread_mutex_t mutex;
+static std::vector<int> client_socket_fds;
+static int serial_port = 0;
+
+static std::array<char, BUFSIZ> tcp_message;
+static std::array<char, BUFSIZ> serial_message;
+
+int main(int argc, const char* argv[]){
+    int server_sock_fd{0};
+    int client_sock_fd{0};
+    struct sockaddr_in server_addr;
+    struct sockaddr_in client_addr;
+    pthread_t pid;
+    if(argc != 2){
+        std::cout << "./SERVER 9999" << std::endl;
+        exit(EXIT_FAILURE); //exit(1);
+    }
+    serial_port = serialport_init("/dev/ttyACM0", 115200, nullptr);
+    if(serial_port == -1){
+        std::cout << "Serial connect error()" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "Serial Port is connected ..." << std::endl;
+
+    server_sock_fd = socket(PF_INET, SOCK_STREAM, 0);
+    if(server_sock_fd == -1){
+        std::cout << "socket() error" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    memset(&server_addr, 0, sizeof server_addr);
+    memset(&client_addr, 0, sizeof client_addr);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_addr.sin_port = htons(atoi(argv[1]));
+    const int bind_state = bind(server_sock_fd, (const struct sockaddr*)&server_addr, sizeof server_addr);
+    if(bind_state == -1){
+        std::cout << "bind() error" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    const int listen_state = listen(server_sock_fd, 5);
+    if(listen_state == -1){
+        std::cout << "listen() error" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    pthread_create(&pid, nullptr, taskSerial, static_cast<void*>(nullptr));
+    socklen_t client_sock_addr_size {0ul};
+
+    while(true){
+        client_sock_addr_size = sizeof client_addr;
+        client_sock_fd = accept(server_sock_fd, (struct sockaddr*)&client_addr, (socklen_t*)&client_sock_addr_size);
+        if(client_sock_fd == -1){
+            std::cout << "accept() error" << std::endl;
+            break;
+        }
+        std::cout << "Connected from client IP : " << inet_ntoa(client_addr.sin_addr) << std::endl;
+
+        pthread_mutex_lock(&mutex);
+        client_socket_fds.push_back(client_sock_fd);
+        pthread_mutex_unlock(&mutex);
+        pthread_create(&pid, nullptr, task, static_cast<void*>(&client_sock_fd));
+        pthread_detach(pid);
+
+    }
+
+    close(server_sock_fd);
+    return int(0);
+}
+
+void* taskSerial(void* arg){
+    while(true){
+        const int serial_state = serialport_read_until(serial_port, serial_message.data(), '\n');
+        if(!serial_state){
+            pthread_mutex_lock(&mutex);
+            for(auto fd : client_socket_fds){
+                write(fd, serial_message.data(), strlen(serial_message.data()));
+            }
+            pthread_mutex_unlock(&mutex);
+        }
+    }
+}
+
+void* task(void* arg){
+    const int clnt_sock_fd {*(static_cast<int*>(arg))};
+    int tcp_str_length = 0;
+    while((tcp_str_length = read(clnt_sock_fd, tcp_message.data(), BUFSIZ)) != 0){
+        pthread_mutex_lock(&mutex);
+        serialport_write(serial_port, tcp_message.data());
+        pthread_mutex_unlock(&mutex);
+    }
+    pthread_mutex_lock(&mutex);
+    int index {0};
+
+    for(auto it {client_socket_fds.begin()}; it != client_socket_fds.end(); ++it){
+        if(*it == clnt_sock_fd){
+            client_socket_fds.erase(it);
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&mutex);
+    close(clnt_sock_fd);
+    return nullptr;
+}
